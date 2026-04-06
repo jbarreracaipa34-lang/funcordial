@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion as m } from 'framer-motion';
 import { 
   Calendar, 
@@ -12,8 +12,23 @@ const FB_PAGE_URL = 'https://www.facebook.com/profile.php?id=100064098697041';
 // Direct iframe src — no SDK needed, loads immediately
 const FB_IFRAME_SRC = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(FB_PAGE_URL)}&tabs=timeline&width=500&height=800&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&locale=es_LA`;
 
+const MAX_WAIT_MS = 8000; // Maximum skeleton time: 8 seconds
+
 const EventsPage = () => {
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const maxTimerRef = useRef(null);
+
+  useEffect(() => {
+    // Guarantee content shows within 8 seconds regardless of network speed
+    maxTimerRef.current = setTimeout(() => setIframeLoaded(true), MAX_WAIT_MS);
+    return () => clearTimeout(maxTimerRef.current);
+  }, []);
+
+  const handleIframeLoad = () => {
+    // Clear the max timer — iframe loaded, just wait 1s for FB to render posts
+    clearTimeout(maxTimerRef.current);
+    setTimeout(() => setIframeLoaded(true), 1000);
+  };
 
   return (
     <div style={{ paddingTop: '5px', minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
@@ -157,10 +172,7 @@ const EventsPage = () => {
                   frameBorder="0"
                   allowFullScreen
                   allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                  onLoad={() => {
-                    // Wait 3s after iframe loads — FB's JS inside still needs time to render posts
-                    setTimeout(() => setIframeLoaded(true), 3000);
-                  }}
+                  onLoad={handleIframeLoad}
                   title="FUNCORDIAL en Facebook"
                 />
               </div>
