@@ -148,15 +148,19 @@ const EventsPage = () => {
                     border: 'none',
                     overflow: 'hidden',
                     width: '100%',
+                    height: '800px',
                     display: 'block',
                     opacity: iframeLoaded ? 1 : 0,
-                    transition: 'opacity 0.4s ease',
+                    transition: 'opacity 0.5s ease',
                   }}
                   scrolling="no"
                   frameBorder="0"
                   allowFullScreen
                   allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                  onLoad={() => setIframeLoaded(true)}
+                  onLoad={() => {
+                    // Wait 3s after iframe loads — FB's JS inside still needs time to render posts
+                    setTimeout(() => setIframeLoaded(true), 3000);
+                  }}
                   title="FUNCORDIAL en Facebook"
                 />
               </div>
