@@ -381,3 +381,8 @@ html {
 .hidden-scroll {
   overflow: hidden;
 }
+
+@keyframes shimmer {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}

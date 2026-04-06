@@ -1,44 +1,19 @@
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion as m } from 'framer-motion';
 import { 
   Calendar, 
   Facebook, 
   ArrowLeft, 
-  ExternalLink,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const FB_PAGE_URL = 'https://www.facebook.com/profile.php?id=100064098697041';
 
+// Direct iframe src — no SDK needed, loads immediately
+const FB_IFRAME_SRC = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(FB_PAGE_URL)}&tabs=timeline&width=500&height=800&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&locale=es_LA`;
+
 const EventsPage = () => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  // Load Facebook SDK and render plugin
-  useEffect(() => {
-    // Remove old SDK if present (for React strict mode / remount)
-    const existingScript = document.getElementById('facebook-jssdk');
-    if (existingScript) existingScript.remove();
-    if (window.FB) delete window.FB;
-
-    window.fbAsyncInit = function () {
-      window.FB.init({ xfbml: true, version: 'v19.0' });
-    };
-
-    const script = document.createElement('script');
-    script.id = 'facebook-jssdk';
-    script.src = 'https://connect.facebook.net/es_LA/sdk.js';
-    script.async = true;
-    script.defer = true;
-    script.crossOrigin = 'anonymous';
-    document.body.appendChild(script);
-
-    return () => {
-      const s = document.getElementById('facebook-jssdk');
-      if (s) s.remove();
-    };
-  }, []);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
 
   return (
     <div style={{ paddingTop: '5px', minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
@@ -110,7 +85,7 @@ const EventsPage = () => {
               </div>
             </div>
 
-            {/* The actual Facebook embed */}
+            {/* The actual Facebook embed — direct iframe, no SDK delay */}
             <div style={{ 
               padding: '1.5rem', 
               backgroundColor: '#f7f8fa',
@@ -124,33 +99,66 @@ const EventsPage = () => {
                 maxWidth: '500px',
                 borderRadius: '8px',
                 overflow: 'hidden',
-                boxShadow: 'var(--shadow-sm)'
+                boxShadow: 'var(--shadow-sm)',
+                position: 'relative',
+                minHeight: '800px',
               }}>
-                {/* FB SDK root — required by the SDK */}
-                <div id="fb-root" />
-                {/* Official Facebook Page Plugin */}
-                <div
-                  className="fb-page"
-                  data-href={FB_PAGE_URL}
-                  data-tabs="timeline"
-                  data-width="500"
-                  data-height="800"
-                  data-small-header="true"
-                  data-adapt-container-width="true"
-                  data-hide-cover="false"
-                  data-show-facepile="false"
-                >
-                  {/* noscript / fallback iframe for browsers that block JS */}
-                  <blockquote
-                    cite={FB_PAGE_URL}
-                    className="fb-xfbml-parse-ignore"
-                    style={{ margin: 0 }}
-                  >
-                    <a href={FB_PAGE_URL} target="_blank" rel="noopener noreferrer">
-                      Fundación Cultural de la Cordialidad
-                    </a>
-                  </blockquote>
-                </div>
+                {/* Skeleton loader — visible until iframe fires onLoad */}
+                {!iframeLoaded && (
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    backgroundColor: '#e4e6eb',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    padding: '20px',
+                    zIndex: 1,
+                  }}>
+                    {[120, 80, 100, 60, 90, 70].map((w, i) => (
+                      <div key={i} style={{
+                        height: '16px',
+                        width: `${w}%`,
+                        backgroundColor: '#cdd0d5',
+                        borderRadius: '8px',
+                        animation: 'shimmer 1.4s ease-in-out infinite alternate',
+                        animationDelay: `${i * 0.15}s`,
+                        maxWidth: '100%',
+                      }} />
+                    ))}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#cdd0d5', animation: 'shimmer 1.4s ease-in-out infinite alternate' }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ height: '12px', width: '50%', backgroundColor: '#cdd0d5', borderRadius: '6px', marginBottom: '6px', animation: 'shimmer 1.4s ease-in-out infinite alternate' }} />
+                        <div style={{ height: '10px', width: '30%', backgroundColor: '#cdd0d5', borderRadius: '6px', animation: 'shimmer 1.4s ease-in-out infinite alternate' }} />
+                      </div>
+                    </div>
+                    <p style={{ color: '#8a8d91', fontSize: '0.8rem', textAlign: 'center', marginTop: 'auto' }}>
+                      Cargando publicaciones de Facebook...
+                    </p>
+                  </div>
+                )}
+
+                {/* Direct iframe — much faster than SDK */}
+                <iframe
+                  src={FB_IFRAME_SRC}
+                  width="500"
+                  height="800"
+                  style={{
+                    border: 'none',
+                    overflow: 'hidden',
+                    width: '100%',
+                    display: 'block',
+                    opacity: iframeLoaded ? 1 : 0,
+                    transition: 'opacity 0.4s ease',
+                  }}
+                  scrolling="no"
+                  frameBorder="0"
+                  allowFullScreen
+                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                  onLoad={() => setIframeLoaded(true)}
+                  title="FUNCORDIAL en Facebook"
+                />
               </div>
 
               {/* Fallback note */}
