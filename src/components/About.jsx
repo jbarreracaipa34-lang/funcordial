@@ -7,12 +7,12 @@ const About = () => {
     {
       title: 'Nuestra Misión',
       icon: <Target className="text-accent" size={40} />,
-      text: 'Somos la Fundación Cultural de la Cordialidad, FUNCORDIAL, una organización sin ánimo de lucro comprometida con el mejoramiento de la calidad de vida de la comunidad de Gámeza, Boyacá. Promovemos e incentivamos las actividades artísticas, culturales, turísticas, agropecuarias y ambientales del municipio mediante escuelas de formación artística para niños, jóvenes y adultos; la organización de eventos y festivales culturales; la recuperación del patrimonio gastronómico y cultural ancestral; y la ejecución de proyectos de desarrollo sostenible — construyendo tejido social desde la cordialidad y el arte como motor de transformación comunitaria.'
+      text: 'Promover e incentivar las actividades artísticas, culturales, turísticas y ambientales de Gámeza, Boyacá, fortaleciendo el tejido social mediante la formación artística, los festivales culturales, la recuperación del patrimonio ancestral y proyectos de desarrollo sostenible para el bienestar de nuestra comunidad.'
     },
     {
       title: 'Nuestra Visión',
       icon: <Eye className="text-accent" size={40} />,
-      text: 'Para 2030, la Fundación Cultural de la Cordialidad, FUNCORDIAL, será reconocida a nivel regional y nacional como el principal motor de desarrollo cultural, artístico y turístico del municipio de Gámeza, posicionando a la Ciudad de Piedra como un referente del patrimonio boyacense. A través de alianzas estratégicas con entidades públicas, privadas y organismos internacionales, habremos consolidado una comunidad artística activa, preservado nuestra gastronomía e identidad ancestral, e impulsado el empleo local con proyectos sostenibles que dignifiquen la vida de nuestros habitantes.'
+      text: 'Ser la organización cultural líder de Boyacá, reconocida por preservar el patrimonio de Gámeza, impulsar el turismo cultural y posicionar a la Ciudad de Piedra como referente artístico y natural, a través de la cordialidad y el desarrollo comunitario sostenible.'
     }
   ];
 
