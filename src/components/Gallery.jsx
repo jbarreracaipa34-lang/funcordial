@@ -255,8 +255,11 @@ export default function Gallery() {
                 <img
                   src={photo.url}
                   alt={photo.title}
-                  loading="lazy"
-                  decoding="async"
+                  loading={idx < 4 ? 'eager' : 'lazy'}
+                  fetchPriority={idx < 4 ? 'high' : 'low'}
+                  decoding={idx < 4 ? 'sync' : 'async'}
+                  width="600"
+                  height="400"
                   style={{
                     width: '100%',
                     display: 'block',
