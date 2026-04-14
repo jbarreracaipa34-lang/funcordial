@@ -1,34 +1,54 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion as m } from 'framer-motion';
 import { 
   Calendar, 
   Facebook, 
-  ArrowLeft, 
+  ArrowLeft,
+  ExternalLink,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const FB_PAGE_URL = 'https://www.facebook.com/profile.php?id=100064098697041';
 
-// Direct iframe src — no SDK needed, loads immediately
-const FB_IFRAME_SRC = `https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(FB_PAGE_URL)}&tabs=timeline&width=500&height=800&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&locale=es_LA`;
-
-const MAX_WAIT_MS = 8000; // Maximum skeleton time: 8 seconds
-
 const EventsPage = () => {
-  const [iframeLoaded, setIframeLoaded] = useState(false);
-  const maxTimerRef = useRef(null);
+  const [isSdkLoaded, setIsSdkLoaded] = useState(false);
 
   useEffect(() => {
-    // Guarantee content shows within 8 seconds regardless of network speed
-    maxTimerRef.current = setTimeout(() => setIframeLoaded(true), MAX_WAIT_MS);
-    return () => clearTimeout(maxTimerRef.current);
+    // 1. Load Facebook SDK
+    const loadFB = () => {
+      if (window.FB) {
+        setIsSdkLoaded(true);
+        window.FB.XFBML.parse();
+        return;
+      }
+
+      window.fbAsyncInit = function() {
+        window.FB.init({
+          xfbml: true,
+          version: 'v18.0'
+        });
+        setIsSdkLoaded(true);
+        window.FB.XFBML.parse();
+      };
+
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = "https://connect.facebook.net/es_LA/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+    };
+
+    loadFB();
   }, []);
 
-  const handleIframeLoad = () => {
-    // Clear the max timer — iframe loaded, just wait 1s for FB to render posts
-    clearTimeout(maxTimerRef.current);
-    setTimeout(() => setIframeLoaded(true), 1000);
-  };
+  // Re-parse when SDK is ready
+  useEffect(() => {
+    if (isSdkLoaded && window.FB) {
+      window.FB.XFBML.parse();
+    }
+  }, [isSdkLoaded]);
 
   return (
     <div style={{ paddingTop: '5px', minHeight: '100vh', backgroundColor: '#f0f2f5' }}>
@@ -100,114 +120,64 @@ const EventsPage = () => {
               </div>
             </div>
 
-            {/* The actual Facebook embed — direct iframe, no SDK delay */}
+            {/* Facebook Page Plugin using SDK */}
             <div style={{ 
               padding: '1.5rem', 
               backgroundColor: '#f7f8fa',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '1.5rem'
+              gap: '1rem',
+              minHeight: '600px'
             }}>
-              <div style={{ 
-                width: '100%',
-                maxWidth: '500px',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                boxShadow: 'var(--shadow-sm)',
-                position: 'relative',
-                minHeight: '800px',
-              }}>
-                {/* Skeleton loader — visible until iframe fires onLoad */}
-                {!iframeLoaded && (
-                  <div style={{
-                    position: 'absolute', inset: 0,
-                    backgroundColor: '#e4e6eb',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                    padding: '20px',
-                    zIndex: 1,
-                  }}>
-                    {[120, 80, 100, 60, 90, 70].map((w, i) => (
-                      <div key={i} style={{
-                        height: '16px',
-                        width: `${w}%`,
-                        backgroundColor: '#cdd0d5',
-                        borderRadius: '8px',
-                        animation: 'shimmer 1.4s ease-in-out infinite alternate',
-                        animationDelay: `${i * 0.15}s`,
-                        maxWidth: '100%',
-                      }} />
-                    ))}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '8px' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#cdd0d5', animation: 'shimmer 1.4s ease-in-out infinite alternate' }} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ height: '12px', width: '50%', backgroundColor: '#cdd0d5', borderRadius: '6px', marginBottom: '6px', animation: 'shimmer 1.4s ease-in-out infinite alternate' }} />
-                        <div style={{ height: '10px', width: '30%', backgroundColor: '#cdd0d5', borderRadius: '6px', animation: 'shimmer 1.4s ease-in-out infinite alternate' }} />
-                      </div>
-                    </div>
-                    <p style={{ color: '#8a8d91', fontSize: '0.8rem', textAlign: 'center', marginTop: 'auto' }}>
-                      Cargando publicaciones de Facebook...
-                    </p>
-                  </div>
-                )}
-
-                {/* Direct iframe — much faster than SDK */}
-                <iframe
-                  src={FB_IFRAME_SRC}
-                  width="500"
-                  height="800"
-                  style={{
-                    border: 'none',
-                    overflow: 'hidden',
-                    width: '100%',
-                    height: '800px',
-                    display: 'block',
-                    opacity: iframeLoaded ? 1 : 0,
-                    transition: 'opacity 0.5s ease',
-                  }}
-                  scrolling="no"
-                  frameBorder="0"
-                  allowFullScreen
-                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-                  onLoad={handleIframeLoad}
-                  title="FUNCORDIAL en Facebook"
-                />
+              <div id="fb-root"></div>
+              <div 
+                className="fb-page" 
+                data-href={FB_PAGE_URL}
+                data-tabs="timeline" 
+                data-width="500" 
+                data-height="800" 
+                data-small-header="false" 
+                data-adapt-container-width="true" 
+                data-hide-cover="false" 
+                data-show-facepile="true"
+              >
+                <blockquote cite={FB_PAGE_URL} className="fb-xfbml-parse-ignore">
+                  <a href={FB_PAGE_URL}>Fundación Cultural de la Cordialidad</a>
+                </blockquote>
               </div>
 
-              {/* Fallback note */}
-              <p style={{ 
-                fontSize: '0.82rem', 
-                color: '#8a8d91', 
-                textAlign: 'center',
-                maxWidth: '400px',
-                lineHeight: '1.5'
+              {/* Minimalist fallback hint */}
+              <div style={{ 
+                marginTop: '1.5rem',
+                padding: '1rem',
+                borderTop: '1px solid #e4e6eb',
+                width: '100%',
+                textAlign: 'center'
               }}>
-                Si el contenido no carga, puede ser por un bloqueador de anuncios. 
-                Visita directamente nuestra página en Facebook ↓
-              </p>
-
-              <a 
-                href="https://www.facebook.com/profile.php?id=100064098697041"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  backgroundColor: '#1877F2',
-                  color: 'white',
-                  padding: '10px 24px',
-                  borderRadius: '6px',
-                  fontWeight: 700,
-                  fontSize: '0.95rem',
-                  textDecoration: 'none',
-                }}
-              >
-                <Facebook size={18} fill="currentColor" /> Abrir en Facebook
-              </a>
+                <p style={{ fontSize: '0.82rem', color: '#8a8d91', marginBottom: '0.8rem' }}>
+                  ¿No puedes ver el contenido? Probablemente tu navegador está bloqueando el plugin oficial de Facebook.
+                </p>
+                <a 
+                  href={FB_PAGE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    backgroundColor: '#1877F2',
+                    color: 'white',
+                    padding: '8px 20px',
+                    borderRadius: '6px',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <ExternalLink size={16} /> Ver en Facebook
+                </a>
+              </div>
             </div>
           </m.div>
 
@@ -249,7 +219,7 @@ const EventsPage = () => {
                   </div>
                 </div>
                 <a 
-                  href="https://www.facebook.com/profile.php?id=100064098697041" 
+                  href={FB_PAGE_URL} 
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
